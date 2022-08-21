@@ -1,0 +1,9 @@
+HEX RM:
+BG: #FAF7E6
+BG2: #FAEEE6
+Brown: #DFC18F
+Red1: #CA0034
+Red2: #A90122
+Red3: #7B0618
+
+Font: Playfair Display and Optima

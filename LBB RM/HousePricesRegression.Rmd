@@ -1,0 +1,762 @@
+---
+title: House Pricing Prediction
+subtitle: with Multiple Regression
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: "hide"
+    includes:
+      after_body: footer.html
+---
+
+<style type="text/css">
+body{ /* Normal  */
+      font-size: 16px;
+      color: Black;
+      font-family: Cardo;
+      background-color: #FAF7E6;
+      text-align: justify;
+      }
+h1.title { /* Title */
+  font-size: 30px;
+  color: Black;
+  text-align: center;
+  font-family: Cardo;
+  font-weight: bold;
+  margin-bottom: 2px;
+  }
+h3.subtitle { /* Subtitle */
+  font-size: 20px;
+  color: #DFC18F;
+  text-align: center;
+  font-family: Cardo;
+  font-weight: bold;
+  font-style:italic;
+  margin-top: 5px;
+  margin-bottom: 30px;
+  }
+td {  /* Table  */
+  font-size: 14px;
+  color: #Black;
+  }
+.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+  padding: 4px;
+  line-height: 1.42857143;
+  border-top: none;
+  }
+.pagedtable-not-empty .pagedtable-footer {
+  border-top: 2px Solid #000000;
+ }
+h1 { /* Header 1 */
+  font-size: 22px;
+  color: #CA0034;
+  font-family: Cardo;
+  font-weight: bold;
+  }
+h2 { /* Header 2 */
+  font-size: 20px;
+  color: #7B0618;
+  font-family: Cardo;
+  font-style: italic;
+  font-weight: bold;
+  }
+h3 { /* Header 3 */
+  font-size: 18px;
+  color: #A90122;
+  font-family: Cardo;
+  font-weight: bold;
+  font-style:italic;
+  }
+p.caption {
+  font-size: 0.9em;
+  font-style: italic;
+  color: grey;
+  margin-right: 10%;
+  margin-left: 30%;  
+  text-align: justify;
+}
+.btn-default {
+  color: #CA0034;
+  background-color: #FAF7E6;
+  border-color: #FAF7E6;
+}
+.btn-default.focus, .btn-default:focus {
+  color: Black;
+  background-color: #FAF3E6;
+  border-color: #8c8c8c;
+}
+.btn.focus, .btn:focus, .btn:hover {
+  color: #CA0034;
+  background-color: #FAF3E6;
+  border-color: #FAF3E6;
+}
+.pagedtable-wrapper {
+  border: #FAF7E6;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+.pagedtable th {
+  padding: 0 5px 0 5px;
+  border: none;
+  border-bottom: Black;
+  min-width: 45px;
+}
+.pagedtable .even {
+  background-color: #FAF3E6;
+}
+a.pagedtable-index-current {
+  text-decoration: none;
+  font-weight: bold;
+  color: #CA0034;
+}
+a.pagedtable-index:hover {
+  text-decoration: none;
+  font-weight: bold;
+  color: #CA0034;
+}
+.pagedtable-index {
+  width: 30px;
+  display: inline-block;
+  text-align: center;
+  border: 0;
+  color: Black;
+}
+a.pagedtable-index-nav {
+  cursor: pointer;
+  padding: 0 5px 0 5px;
+  float: right;
+  border: 0;
+  color: #CA0034;
+}
+a.pagedtable-index-nav-disabled {
+  cursor: default;
+  text-decoration: none;
+  color: #999;
+}
+.pagedtable th {
+padding: 0 5px 0 5px;
+border: none;
+border-bottom: 2px solid #000000;
+min-width: 45px;
+}
+.nav-pills>li.active>a, .nav-pills>li.active>a:focus, .nav-pills>li.active>a:hover {
+    color: #fff;
+    background-color: #CA0034;
+}
+a {
+    color: #CA0034;
+    text-decoration: none;
+}
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+    z-index: 2;
+    color: #fff;
+    background-color: #CA0034;
+    border-color: #CA0034;
+}
+.tocify {
+    width: 20%;
+    max-height: 90%;
+    overflow: auto;
+    margin-left: 2%;
+    position: fixed;
+    border: 1px solid #FAF7E6;
+    border-radius: 6px;
+}
+.list-group-item {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: -1px;
+    background-color: #FAF7E6;
+    border: 0;
+}
+g.hovertext > path {
+  opacity: 0.6;
+}
+code {
+    color: inherit;
+    background-color: #FAF3E6;
+}
+
+</style>
+
+
+```{css, echo=F}
+.code-block {
+  background-color: #FAF3E6;
+  border: #FAF7E6;
+  color: Black;
+}
+.bg-output {
+  background-color: #FAF3E6;
+  border: #FAF7E6;
+  color: Black;
+}
+.fold-show {
+  background-color: #FAF3E6;
+  border: #FAF7E6;
+  color: Black;
+}
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(class.source = "code-block", class.output = "bg-output")
+```
+
+```{r, echo=F}
+rm(list = ls())
+options(scipen = 9999)
+```
+
+```{r, echo=F, include=F}
+library(tidyverse)
+library(scales)
+library(gridExtra)
+library(extrafont)
+library(scales)
+library(lubridate)
+library(rmarkdown)
+library(knitr)
+library(highcharter)
+library(data.table)
+library(ggplot2)
+library(car)
+library(scales)
+library(lmtest)
+library(MLmetrics)
+library(echarts4r)
+library(reshape2)
+library(glue)
+library(plotly)
+```
+
+
+```{r, echo = F}
+thm <- hc_theme_merge(
+  hc_theme_tufte(),
+  hc_theme(
+    chart = list(
+      backgroundColor = "#FAF7E6"
+    ),
+    yAxis = list(
+      gridLineWidth = 0,
+      minorTickLength = 0,
+      tickLength = 0
+    ),
+    xAxis = list(
+      gridLineWidth = 0
+    ),
+    title = list(
+      style = list(fontSize = "25px",
+                   fontWeight = "bold",
+                   fontFamily = "Cardo")),
+    series = list(
+      pointWidth = 50
+    )
+    ))
+```
+
+# Introduction
+
+In this project, we will **predict** House's Price using **Multiple Regression model** along with the **correlation analysis** between the _predictor variables_ and the _target variable_. The dataset that we're using are **HousePricing** dataset from [Kaggle](https://www.kaggle.com/datasets/greenwing1985/housepricing).
+
+```{r, fig.align="center",echo=FALSE}
+knitr::include_graphics("assets/thehousee.png")
+```
+
+# Understanding our Data {.tabset .tabset-fade .tabset-pills}
+
+Before we're doing our **Exploratory Data Analysis**, we will examine our dataset first to see if there are any anomalies that we can fix within the dataset. It is important that insights are only as good as the data that informs them. This means it's vital for the data to be clean and in the shape of usable form.
+
+## Load Data
+
+```{r}
+house <- read.csv("HousePrices_HalfMil.csv")
+rmarkdown::paged_table(house)
+```
+
+## Data Wrangling
+
+* Check for **data types**:
+```{r}
+glimpse(house)
+```
+
+Based on the glimpse alone, there are no anomalies within the dataset.
+
+* Check for **missing values**:
+
+```{r}
+colSums(is.na(house))
+```
+We can see that there are no missing values within our dataset and we can confirm that the data is already clean. By this, we can move into our next step which is **Exploratory Data Analysis**.
+
+# Exploratory Data Analysis
+
+Exploratory data analysis (EDA) involves using graphics and visualizations to explore and analyze a data set. The goal is to explore, investigate and learn the data variables within our dataset. In this section, we will be analyzing the **Pearson Correlation** between all of our variables.
+
+```{r}
+cormat <- round(cor(house),2)
+
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+  }
+
+get_upper_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+
+lower_tri <- get_lower_tri(cormat)
+
+house_cor_melt <- reshape2::melt(lower_tri, na.rm = TRUE)
+house_cor_melt <- house_cor_melt %>% 
+  mutate(label = glue("{Var1} ~ {Var2}"))
+
+plot1 <- ggplot(house_cor_melt,aes(Var1, Var2, text = label)) +
+  geom_tile(aes(fill = value)) +
+  geom_text(aes(label = round(value, 1)), alpha=0.5, size = 3) + 
+  scale_fill_gradientn(colors = c("#CA0034","#FAF7E6","#CA0034"),
+                      values = rescale(c(-1,0,1)),
+                      limits = c(-1,1)) +
+  labs(x = NULL,
+      y = NULL,
+      fill = "Pearson Corr:") +
+  theme(legend.background = element_rect(fill = "#FAF7E6", color = "#FAF7E6"),
+        plot.background = element_rect(fill = "#FAF7E6", color = "#FAF7E6"),
+        panel.background = element_rect(fill = "#FAF7E6"),
+        panel.grid = element_line(colour = "#FAF7E6"),
+        panel.grid.major.x = element_line(colour = "#FAF7E6"),
+        panel.grid.minor.x = element_line(colour = "#FAF7E6"),
+        legend.title = element_text(colour = "Black", face ="bold", family = "Cardo"),
+        legend.justification = c(1, 0),
+        legend.position = c(0.6, 0.7),
+        axis.text.x = element_text(color = "Black", family = "Cardo",
+                                angle = 45, vjust = 0.5, hjust = 2),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank()) +
+        guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                  title.position = "top", title.hjust = 0.5))
+
+ggplotly(plot1, tooltip = "text") %>% 
+  layout(hoverlabel = list( bgcolor = "rgba(255,255,255,0.75)",
+                         font = list(
+                           color = "Black",
+                           family = "Cardo",
+                           size = 12
+                         )))
+```
+
+Since we're going to predict the prices of the House, we want to see which variables that have strong correlation with `Price`. Based on the plot above, those variables are `White Marble`, `Indian Marble`, `Floors`, `Fiber`, `City`, and `Glass Doors`. 
+
+## Multicollinearity (Initial)
+
+However, if we look once again to our plot, there are cases of **Multicollinearity** between the `White.Marble`, `Black.Marble`, and `Indian.Marble`. To deal with this kind of issue, we have to see their values first to see if the types are already as we desired.
+
+```{r, class.source="fold-show"}
+unique(house$White.Marble)
+unique(house$Indian.Marble)
+unique(house$Black.Marble)
+```
+Since the values are either **1** or **0**, we will change their data type into factor/categorical and test their correlation with **Pearson's Chi-squared test** (Note: _these are used for categorical data types only_)
+
+```{r}
+# Change the data types first
+white.marble <- as.factor(house$White.Marble)
+indian.marble <- as.factor(house$Indian.Marble)
+black.marble <- as.factor(house$Black.Marble)
+
+# Pearson's Chi-squared test
+chisq.test(white.marble, indian.marble)
+chisq.test(white.marble, black.marble)
+chisq.test(indian.marble, black.marble)
+```
+From the results above we can see that these 3 variables are statistically significant within each other with _p-values below **0.05**_ that indicates there are multicollinearity caused by these variables. To deal with this kind of problem, we will remove **only one** variable that have the weakest correlation with our **target variable** which is `Black.Marble`.
+
+```{r, class.source = "fold-show"}
+#remove Black.Marble from our dataset
+house <- house %>% 
+  select(-Black.Marble)
+```
+
+## Outliers
+
+In data analysis, the identification of outliers and thus, observations that fall well outside the overall pattern of the data is very important. As a diagnostic tool for spotting observations that may be outliers we may use a **boxplot** which based on the five-number summary and can be used to provide a graphical display of the center and variation of a data set.
+
+```{r, fig.align='center'}
+house_price <- house %>% 
+  select(Prices) %>% 
+  pivot_longer(
+  Prices,
+  names_to = "name")
+
+myboxplotData <- data_to_boxplot(house_price, value, name,
+                                 group_var = name,
+                                 add_outliers = TRUE,
+                                 fillColor = "#CA0034",
+                                 color = "Black")
+
+highchart()%>%
+  hc_xAxis(type ="category")%>%
+  hc_add_series_list(myboxplotData)%>%
+  hc_title(text= "Price Distribution") %>% 
+  hc_legend(enabled= FALSE) %>% 
+  hc_add_theme(thm) %>% 
+  hc_yAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6"))) %>% 
+  hc_xAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6")),
+    reversed = T) %>% 
+  hc_chart(inverted = TRUE)  
+```
+
+As demonstrated from the **boxplot** above, there are 6 outliers whose are not too far away from the others. Moreover, the median also perfectly placed in the middle of the box which indicates that the _target variable_ is normaly distributed.
+
+## Bivariate Analysis {.tabset .tabset-fade .tabset-pills}
+
+The purpose of bivariate analysis is to understand the relationship between two variables. The bivariate analysis involves the analysis of two variables, **X**: _independent/explanatory/outcome variable_ and **Y**: _dependent/outcome variable_, to determine the relationship between them. In this case, we already have selected our predictors and we want to see their relationship with the target variable using **Boxplot**.
+
+Why **Boxplot**? It's because all of our predictor's values are categorical. If you're going back to our **Data Wrangling** session you can see that these variables has value of 1 and 0. Which means **1** if the facility is _present_ and **0** if the facility is _not present_.
+
+### vs. White Marble
+
+```{r}
+price_wmarble <- house %>% 
+  select(Prices, White.Marble) %>% 
+  pivot_longer(
+  White.Marble,
+  names_to = "name") %>% 
+  mutate(value = as.factor(value))
+
+myboxplotDataw <- data_to_boxplot(price_wmarble, Prices, value,
+                                 group_var = value,
+                                 add_outliers = TRUE,
+                                 fillColor = "#CA0034",
+                                 color = "Black")
+
+highchart()%>%
+  hc_xAxis(type ="category")%>%
+  hc_add_series_list(myboxplotDataw)%>%
+  hc_legend(enabled= FALSE) %>% 
+  hc_add_theme(thm) %>% 
+  hc_yAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6"))) %>% 
+  hc_xAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6")))
+```
+We can conclude that the `Prices` are going **higher** if the House has `White Marble` in it.
+
+### vs Indian Marble
+
+```{r}
+price_imarble <- house %>% 
+  select(Prices, Indian.Marble) %>% 
+  pivot_longer(
+  Indian.Marble,
+  names_to = "name") %>% 
+  mutate(value = as.factor(value))
+
+myboxplotDatai <- data_to_boxplot(price_imarble, Prices, value,
+                                 group_var = value,
+                                 add_outliers = TRUE,
+                                 fillColor = "#CA0034",
+                                 color = "Black")
+
+highchart()%>%
+  hc_xAxis(type ="category")%>%
+  hc_add_series_list(myboxplotDatai)%>%
+  hc_legend(enabled= FALSE) %>% 
+  hc_add_theme(thm) %>% 
+  hc_yAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6"))) %>% 
+  hc_xAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6")))
+```
+We can conclude that the `Prices` are going **lower** if the House has `Indian Marble` in it.
+
+### vs. Floors
+
+```{r}
+price_floor <- house %>% 
+  select(Prices, Floors) %>% 
+  pivot_longer(
+  Floors,
+  names_to = "name") %>% 
+  mutate(value = as.factor(value))
+
+myboxplotDatafl <- data_to_boxplot(price_floor, Prices, value,
+                                 group_var = value,
+                                 add_outliers = TRUE,
+                                 fillColor = "#CA0034",
+                                 color = "Black")
+
+highchart()%>%
+  hc_xAxis(type ="category")%>%
+  hc_add_series_list(myboxplotDatafl) %>% 
+  hc_legend(enabled= FALSE) %>% 
+  hc_add_theme(thm) %>% 
+  hc_yAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6"))) %>% 
+  hc_xAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6")))
+```
+We can conclude that the `Prices` are going **higher** if the House has `Floors` in it.
+
+### vs. Fiber
+
+```{r}
+price_fiber <- house %>% 
+  select(Prices, Fiber) %>% 
+  pivot_longer(
+  Fiber,
+  names_to = "name") %>% 
+  mutate(value = as.factor(value))
+
+myboxplotDataf <- data_to_boxplot(price_fiber, Prices, value,
+                                 group_var = value,
+                                 add_outliers = TRUE,
+                                 fillColor = "#CA0034",
+                                 color = "Black")
+
+highchart()%>%
+  hc_xAxis(type ="category")%>%
+  hc_add_series_list(myboxplotDataf)%>%
+  hc_legend(enabled= FALSE) %>% 
+  hc_add_theme(thm) %>% 
+  hc_yAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6"))) %>% 
+  hc_xAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6")))
+```
+We can conclude that the `Prices` are going **higher** if the House has `Fiber` in it.
+
+### vs. Glass Doors
+
+```{r}
+price_gdoor <- house %>% 
+  select(Prices, Glass.Doors) %>% 
+  pivot_longer(
+  Glass.Doors,
+  names_to = "name") %>% 
+  mutate(value = as.factor(value))
+
+myboxplotDatag <- data_to_boxplot(price_gdoor, Prices, value,
+                                 group_var = value,
+                                 add_outliers = TRUE,
+                                 fillColor = "#CA0034",
+                                 color = "Black")
+
+highchart()%>%
+  hc_xAxis(type ="category")%>%
+  hc_add_series_list(myboxplotDatag) %>% 
+  hc_legend(enabled= FALSE) %>% 
+  hc_add_theme(thm) %>% 
+  hc_yAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6"))) %>% 
+  hc_xAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6")))
+```
+We can conclude that the `Prices` are going **higher** if the House has `Glass Doors` in it.
+
+### vs. City
+
+```{r}
+price_city <- house %>% 
+  select(Prices, City) %>% 
+  pivot_longer(
+  City,
+  names_to = "name") %>% 
+  mutate(value = as.factor(value))
+
+myboxplotDatac <- data_to_boxplot(price_city, Prices, value,
+                                 group_var = value,
+                                 add_outliers = TRUE,
+                                 fillColor = "#CA0034",
+                                 color = "Black")
+
+highchart()%>%
+  hc_xAxis(type ="category")%>%
+  hc_add_series_list(myboxplotDatac) %>% 
+  hc_legend(enabled= FALSE) %>% 
+  hc_add_theme(thm) %>% 
+  hc_yAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6"))) %>% 
+  hc_xAxis(
+    labels = list(
+      style = list(
+        color = "#FAF7E6")))
+```
+
+### {-}
+
+# Model
+
+## Cross Validation
+
+Before we go into modelling, we are going to do **Cross Validation** for our dataset first. Why? The **Cross Validation** procedure is used to **estimate the performance of machine learning** algorithms when they are used to make **predictions** on unseen data. In this context, we will take 80% of our dataset to **train** our model and 20% of our dataset to **test** our prediction to see the model's performance.
+
+```{r, class.source = "fold-show"}
+# Set seed to lock the random
+set.seed(417)
+
+# Index Sampling
+index <- sample(nrow(house), size = nrow(house)*0.80)
+
+# Splitting
+house_train <- house[index,] #take 80%
+house_test <- house[-index,] #take 20%
+```
+
+## Modelling 
+
+After we split our data, now we will train our models using the `house_train` data. For the _independent variables_ (**X**), we are going to use `White Marble`, `Indian Marble`, `City`, `Floor` `Fibers` and `Glass.Doors` since they're the ones who have high correlation with our Prices.
+
+```{r}
+model_corr <- lm(formula = Prices ~ Floors + Fiber + White.Marble + Indian.Marble + City + Glass.Doors,
+                data = house_train)
+summary(model_corr)
+```
+$$
+R^2 = 0.9361
+$$
+It means approximately **93,6%** of the observed variation can be explained by the model's inputs. Moreover, all variables p-values are below 0.05 which means they're all **significant** with our _dependent variable_ (**Y**)
+
+## Predicting
+
+We will predict the _unseen data_ (the test data) using our **selected model**. To see the comparison between the **actual value** and the **prediction value**, you can refer to the table below:
+
+```{r}
+pred_model <- predict(model_corr, newdata = house_test)
+pred_comp <- data.frame(Actual.Value = house_test$Prices, Prediction.Value = pred_model)
+rmarkdown::paged_table(pred_comp)
+```
+
+
+# Evaluation
+
+## Model Performance
+
+However, seeing only those values and comparing them will be too hard for us to evaluating our model's performance. In this part, we will introduce you the **RMSE** or _Root Mean Squared Error_ calculation to calculates our model's performance:
+$$
+RMSE = \sqrt{\frac{1}{n} \sum (\hat y - y)^2}
+$$
+**RMSE** is one of the most popular measures to estimate the accuracy of our forecasting model’s **predicted values** versus the **actual or observed values** while training the regression models. Below is the **RMSE's** comparison for our training and test data.
+
+```{r, class.source = "fold-show"}
+# RMSE of train dataset
+RMSE(y_pred = model_corr$fitted.values, y_true = house_train$Prices)
+```
+```{r, class.source = "fold-show"}
+# Check the range
+range(house_train$Prices)
+```
+
+```{r, class.source = "fold-show"}
+# RMSE of test dataset
+RMSE(y_pred = pred_model, y_true = house_test$Prices)
+```
+```{r, class.source = "fold-show"}
+# Check the range
+range(house_test$Prices)
+```
+
+As shown above that the comparison of RMSE of both test and train datasets are quite similar between each other. Moreover, these two **RMSE** scores are indubitably small/below compared to both dataset's range of value. This means that there is no indication of **_Overfitting_** nor **_Underfitting_** in our model and the **_model performance is already GOOD enough_**.
+
+## Assumptions {.tabset .tabset-fade .tabset-pills}
+
+### Normality
+
+Our Linear Regression model is expected to have **normally distributed error** which means majority of the errors are expected to be around 0.
+
+```{r}
+res <- data.frame(residual = model_corr$residuals)
+
+res %>% 
+e_charts() %>% 
+  e_histogram(residual, name = "Error", legend = F) %>% 
+  e_title(
+    text = "Normality of Residuals",
+    textStyle = list(fontFamily = "Cardo", fontSize = 25),
+    subtext = "Normally Distributed Error",
+    subtextStyle = list(fontFamily = "Cardo", fontSize = 15, fontStyle = "italic"),
+    left = "center") %>% 
+  e_hide_grid_lines() %>% 
+  e_tooltip() %>% 
+  e_theme_custom("rangga_rm.json") %>% 
+  e_x_axis(axisLabel = list(fontFamily = "Cardo")) %>% 
+  e_y_axis(axisLabel = list(color = "#FAF7E6"))
+```
+As demonstrated above, our Errors are mostly concentrated around 0 which means the Errors are **normally distributed** and our **_Normality assumption is fulfilled_**. 
+
+Moreover, if you might be wondering why we don't do any _Shapiro Test_ for this assumption? It's because in **R language**, the _Shapiro Test_ only limited to 5,000 data meanwhile our dataset **has more than that**. We afraid that, if we only use our data partially, the test itself wouldn't be able to fully represent the entirety of the assumption. Becasue of that, we will only use our visualization above to test this particular assumption.
+
+### Homoscedasticity
+
+To test our Error's **homoscedasticity**, we will use Breusch-Pagan hypothesis test:
+
+* **H0**: error spreads in constant manner, which means the error is **homoscedasticity**
+* **H1**: error spreads in non-constant manner, which means the error is **heteroscedasticity**
+
+```{r, class.source = "fold-show"}
+bptest(model_corr)
+```
+To fulfill **Homoscedasticity** assumption, we need to _fail to reject_ our **H0 Hyphotesis** means we should have p-value > 0.05. Based on the result above, our model _p-value_ is **0.2091** which is bigger than 0.05. This implies that our _Error spreads in constant manner, hence the error is homoscedasticity_ and **_Homoscedasticity assumption is fulfilled_**.
+
+### No Multicollinearity
+
+Multicollinearity is a condition when there are strong correlations between our _Independent Variable_ (**X**). We don't want these variables to be our predictor since they're redundant and we are going to choose only one variable out of it. To test this assumption, we will apply Variance Inflation Factor (VIF) test with conditions:
+
+* **VIF > 10**: There's multicollinearity.
+* **VIF < 10**: There's no multicollinearity.
+
+To fulfill this assumption, all of our VIF Scores should be below 10 or **No Multicollinearity** happened.
+
+```{r, class.source = "fold-show"}
+vif(model_corr)
+```
+Evidently from the results above, the VIF scores for all our _Independent Variable_ (**X**) are all below 10 which indicates that the **_ No Multicollinearity assumption is fulfilled_**.
+
+# Conclusion
+
+From the conclusion above, it is evident that our _Independent Variables_ proof to be useful to predict the House's Prices. Those variables are:
+
+* `White.Marble`
+* `Indian.Marble`
+* `City`
+* `Floors`
+* `Fiber`
+* `Glass.Doors`
+
+Other than that, our model has successfully satisfied all the classical assumptions **Normality**, **Homoscedasticity**, and **No Multicollinearity**.
+
+Moreover, the _R-Squared_ of our model is high  with approximately **93,6%** of the observed variation can be explained by our model's inputs and the _accuracy_ (our **RMSE** scores) of the model in predicting the house price is indubitably good **without any indication of _Overfitting_ and _Underfitting_**. Therefore, this particular model is excellent to use for our prediction attempt.
+
+
